@@ -108,3 +108,24 @@ run = "terraform -chdir=stacks/synology/nfs plan"
 description = "Apply the Synology NFS Terraform stack"
 depends = ["terraform:check-env"]
 run = "terraform -chdir=stacks/synology/nfs apply"
+
+[tasks."terraform:init:synology-caddy"]
+description = "Initialize the Synology Caddy Terraform stack"
+depends = ["terraform:check-env"]
+run = """
+terraform -chdir=stacks/synology/caddy init -input=false \
+  -backend-config="bucket=$INFRA_B2_BUCKET" \
+  -backend-config="endpoint=https://$INFRA_B2_ENDPOINT" \
+  -backend-config="access_key=$INFRA_B2_ACCESS_KEY_ID" \
+  -backend-config="secret_key=$INFRA_B2_SECRET_ACCESS_KEY"
+"""
+
+[tasks."terraform:plan:synology-caddy"]
+description = "Plan the Synology Caddy Terraform stack"
+depends = ["terraform:check-env"]
+run = "terraform -chdir=stacks/synology/caddy plan"
+
+[tasks."terraform:apply:synology-caddy"]
+description = "Apply the Synology Caddy Terraform stack"
+depends = ["terraform:check-env"]
+run = "terraform -chdir=stacks/synology/caddy apply"

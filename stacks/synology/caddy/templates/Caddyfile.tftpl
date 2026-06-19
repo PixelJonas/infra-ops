@@ -1,0 +1,31 @@
+{
+	email ${acme_email}
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+(cloudflare_tls) {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		propagation_delay 30s
+		propagation_timeout -1
+	}
+}
+
+%{ for key, host in proxy_hosts ~}
+${host.domain} {
+	import cloudflare_tls
+%{ if try(host.tls_upstream, false) ~}
+	reverse_proxy ${host.backend} {
+		transport http {
+			tls
+%{ if try(host.tls_insecure, false) ~}
+			tls_insecure_skip_verify
+%{ endif ~}
+		}
+	}
+%{ else ~}
+	reverse_proxy ${host.backend}
+%{ endif ~}
+}
+
+%{ endfor ~}
