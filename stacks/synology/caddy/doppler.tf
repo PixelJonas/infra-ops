@@ -6,9 +6,9 @@ locals {
   synology_password    = data.doppler_secrets.this.map.SYNOLOGY_PASSWORD
   cloudflare_api_token = data.doppler_secrets.this.map.CLOUDFLARE_API_KEY
   acme_email           = data.doppler_secrets.this.map.INFRA_ACME_EMAIL
-  caddy_share_path     = data.doppler_secrets.this.map.INFRA_CADDY_SHARE_PATH
-  caddy_host_path      = data.doppler_secrets.this.map.INFRA_CADDY_HOST_PATH
+  caddy_share_path     = nonsensitive(data.doppler_secrets.this.map.INFRA_CADDY_SHARE_PATH)
+  caddy_host_path      = nonsensitive(data.doppler_secrets.this.map.INFRA_CADDY_HOST_PATH)
   synology_ssh_host    = data.doppler_secrets.this.map.INFRA_SYNOLOGY_SSH_HOST
   synology_ssh_user    = data.doppler_secrets.this.map.INFRA_SYNOLOGY_SSH_USER
-  proxy_hosts          = jsondecode(data.doppler_secrets.this.map.INFRA_PROXY_HOSTS)
+  proxy_hosts          = jsondecode(nonsensitive(data.doppler_secrets.this.map.INFRA_PROXY_HOSTS))
 }
