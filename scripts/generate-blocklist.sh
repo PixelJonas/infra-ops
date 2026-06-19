@@ -12,7 +12,12 @@ fi
 
 echo "Generating blocklist from Doppler..."
 doppler secrets download --project infra-ops --config prd --no-file --format json \
-  | jq -r 'to_entries[] | select(.value | length > 3) | .value' \
+  | jq -r '
+    to_entries[]
+    | select(.value | length > 3)
+    | select(.key | test("^DOPPLER_|_USERNAME$|_USER$") | not)
+    | .value
+  ' \
   | sort -u \
   > "$BLOCKLIST"
 
