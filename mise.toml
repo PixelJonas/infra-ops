@@ -150,3 +150,24 @@ run = "terraform -chdir=stacks/synology/monitoring plan"
 description = "Apply the Synology Monitoring Terraform stack"
 depends = ["terraform:check-env"]
 run = "terraform -chdir=stacks/synology/monitoring apply"
+
+[tasks."terraform:init:synology-tailsafe"]
+description = "Initialize the Synology TailSafe Terraform stack"
+depends = ["terraform:check-env"]
+run = """
+terraform -chdir=stacks/synology/tailsafe init -input=false \
+  -backend-config="bucket=$INFRA_B2_BUCKET" \
+  -backend-config="endpoint=https://$INFRA_B2_ENDPOINT" \
+  -backend-config="access_key=$INFRA_B2_ACCESS_KEY_ID" \
+  -backend-config="secret_key=$INFRA_B2_SECRET_ACCESS_KEY"
+"""
+
+[tasks."terraform:plan:synology-tailsafe"]
+description = "Plan the Synology TailSafe Terraform stack"
+depends = ["terraform:check-env"]
+run = "terraform -chdir=stacks/synology/tailsafe plan"
+
+[tasks."terraform:apply:synology-tailsafe"]
+description = "Apply the Synology TailSafe Terraform stack"
+depends = ["terraform:check-env"]
+run = "terraform -chdir=stacks/synology/tailsafe apply"

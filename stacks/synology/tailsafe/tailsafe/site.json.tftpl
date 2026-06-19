@@ -1,0 +1,75 @@
+{
+  "instance": "${instance_name}",
+  "auth": {
+    "disabled": false,
+    "users": [
+      {
+        "name": "${admin_user}",
+        "passwordBcrypt": "${admin_password_bcrypt}"
+      }
+    ]
+  },
+  "outboundRemotes": [
+    {
+      "id": "${peer_id}",
+      "endpointHostname": "${peer_endpoint_hostname}",
+      "backupUri": "rest:http://backup-${peer_id}:$${TAILSAFE_REMOTE_BACKUP_HTTP_PASSWORD_FLORIAN}@${peer_endpoint_hostname}:8000/${admin_user}",
+      "maintenanceUri": "rest:http://maint-${peer_id}:$${TAILSAFE_REMOTE_MAINT_HTTP_PASSWORD_FLORIAN}@${peer_endpoint_hostname}:8001/${admin_user}",
+      "repositoryPassword": "$${RESTIC_REPOSITORY_PASSWORD}",
+      "healthchecks": {
+        "check": "${healthchecks.check}",
+        "forget": "${healthchecks.forget}",
+        "prune": "${healthchecks.prune}"
+      }
+    }
+  ],
+  "inboundPeers": [
+    {
+      "id": "${peer_id}",
+      "endpointAuthKey": "$${TS_ENDPOINT_AUTHKEY_FLORIAN}",
+      "endpointHostname": "$${TS_ENDPOINT_HOSTNAME_FLORIAN}",
+      "repositorySubdir": "${peer_repo_subdir}",
+      "backup": {
+        "user": "backup-${admin_user}",
+        "password": "$${TAILSAFE_INBOUND_BACKUP_HTTP_PASSWORD_FLORIAN}"
+      },
+      "maintenance": {
+        "user": "maint-${admin_user}",
+        "password": "$${TAILSAFE_INBOUND_MAINT_HTTP_PASSWORD_FLORIAN}"
+      }
+    }
+  ],
+  "defaults": {
+    "backupCron": "15 2 * * *",
+    "checkCron": "20 3 * * 0",
+    "forgetCron": "35 3 * * 0",
+    "pruneCron": "50 3 * * 0",
+    "retention": {
+      "daily": 30,
+      "weekly": 8,
+      "monthly": 12,
+      "yearly": 2
+    }
+  },
+  "healthchecks": {
+    "check": "${healthchecks.check}",
+    "forget": "${healthchecks.forget}",
+    "prune": "${healthchecks.prune}"
+  },
+  "sources": [
+%{ for i, mount in source_mounts ~}
+    {
+      "id": "${mount.id}",
+      "paths": ["${mount.container}"],
+      "excludes": [],
+      "destinationIds": ["${peer_id}"],
+      "healthchecks": {
+        "backup": "${mount.healthcheck}"
+      }
+    }%{ if i < length(source_mounts) - 1 },
+%{ else }
+
+%{ endif ~}
+%{ endfor ~}
+  ]
+}
