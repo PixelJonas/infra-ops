@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 30s
+
+scrape_configs:
+  - job_name: "node_exporter"
+    static_configs:
+      - targets: ["${scrape_targets.node_exporter.host}:${scrape_targets.node_exporter.port}"]
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "(node_boot_time_seconds|node_cpu_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filesystem_avail_bytes|node_filesystem_size_bytes|node_load1|node_load5|node_load15|node_memory_active_bytes|node_memory_free_bytes|node_memory_inactive_bytes|node_memory_purgeable_bytes|node_memory_swap_total_bytes|node_memory_wired_bytes|node_network_receive_bytes_total|node_network_receive_errs_total|node_network_receive_packets_total|node_network_transmit_bytes_total|node_network_transmit_errs_total|node_network_transmit_packets_total|node_scrape_collector_duration_seconds|node_time_seconds)"
+        action: keep
+
+  - job_name: "jellyfin"
+    static_configs:
+      - targets: ["${scrape_targets.jellyfin.host}:${scrape_targets.jellyfin.port}"]
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "(http_requests_in_progress)"
+        action: keep
+
+  - job_name: "jellyfin-metrics"
+    static_configs:
+      - targets: ["${scrape_targets.jellyfin_metrics.host}:${scrape_targets.jellyfin_metrics.port}"]
+
+  - job_name: "hass"
+    scrape_interval: 60s
+    metrics_path: /api/prometheus
+    authorization:
+      credentials: "${hass_token}"
+    scheme: http
+    static_configs:
+      - targets: ["${scrape_targets.hass.host}:${scrape_targets.hass.port}"]
