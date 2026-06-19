@@ -13,7 +13,7 @@ fi
 FOUND=0
 while IFS= read -r pattern; do
   [ -z "$pattern" ] && continue
-  MATCHES=$(git diff --cached --diff-filter=ACMR -U0 | grep -nF "$pattern" || true)
+  MATCHES=$(git diff --cached --diff-filter=ACMR -U0 | grep '^\+' | grep -nF "$pattern" || true)
   if [ -n "$MATCHES" ]; then
     echo "BLOCKED: Site-specific value found in staged changes:"
     echo "$MATCHES"
