@@ -1,0 +1,6 @@
+**/.terraform/
+*.tfstate
+*.tfstate.*
+tfplan
+.env.doppler
+.githooks/blocklist.txt

@@ -1,0 +1,43 @@
+name: Leakage Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Generate blocklist
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: ./scripts/generate-blocklist.sh
+
+      - name: Scan for leaked values
+        run: |
+          FOUND=0
+          while IFS= read -r pattern; do
+            [ -z "$pattern" ] && continue
+            MATCHES=$(grep -rnF "$pattern" --include='*.tf' --include='*.tftpl' --include='*.json' --include='*.yaml' --include='*.yml' --include='*.toml' --include='*.md' . || true)
+            # Exclude .env.doppler.template (it has placeholder text, not values)
+            MATCHES=$(echo "$MATCHES" | grep -v '.env.doppler.template' | grep -v '.githooks/' || true)
+            if [ -n "$MATCHES" ]; then
+              echo "LEAKED VALUE FOUND:"
+              echo "$MATCHES"
+              FOUND=1
+            fi
+          done < .githooks/blocklist.txt
+
+          if [ "$FOUND" -eq 1 ]; then
+            echo ""
+            echo "Site-specific values detected in tracked files."
+            echo "All configuration must come from Doppler — see CLAUDE.md."
+            exit 1
+          fi
+          echo "No leaked values found."

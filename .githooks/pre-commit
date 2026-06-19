@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+BLOCKLIST="$REPO_ROOT/.githooks/blocklist.txt"
+
+if [ ! -f "$BLOCKLIST" ]; then
+  echo "ERROR: Blocklist not found at $BLOCKLIST"
+  echo "Run 'mise run setup' to generate it from Doppler."
+  exit 1
+fi
+
+FOUND=0
+while IFS= read -r pattern; do
+  [ -z "$pattern" ] && continue
+  MATCHES=$(git diff --cached --diff-filter=ACMR -U0 | grep -nF "$pattern" || true)
+  if [ -n "$MATCHES" ]; then
+    echo "BLOCKED: Site-specific value found in staged changes:"
+    echo "$MATCHES"
+    echo ""
+    FOUND=1
+  fi
+done < "$BLOCKLIST"
+
+if [ "$FOUND" -eq 1 ]; then
+  echo "Commit blocked. All site-specific values must come from Doppler."
+  echo "Check the lines above and replace hardcoded values with local.* references."
+  exit 1
+fi

@@ -1,0 +1,26 @@
+[env]
+_.file = ".env.doppler"
+
+[tools]
+"aqua:hashicorp/terraform" = "1.15.6"
+
+[tasks."terraform:check-env"]
+description = "Verify Doppler token and B2 backend credentials are configured"
+hide = true
+run = """
+: "${DOPPLER_TOKEN:?DOPPLER_TOKEN not set — copy .env.doppler.template to .env.doppler and add your Doppler service token}"
+: "${INFRA_B2_BUCKET:?INFRA_B2_BUCKET not set — add B2 bucket name to .env.doppler}"
+: "${INFRA_B2_ENDPOINT:?INFRA_B2_ENDPOINT not set — add B2 endpoint to .env.doppler}"
+: "${INFRA_B2_ACCESS_KEY_ID:?INFRA_B2_ACCESS_KEY_ID not set — add B2 access key to .env.doppler}"
+: "${INFRA_B2_SECRET_ACCESS_KEY:?INFRA_B2_SECRET_ACCESS_KEY not set — add B2 secret key to .env.doppler}"
+"""
+
+[tasks.setup]
+description = "Configure git hooks and generate blocklist from Doppler"
+run = """
+set -euo pipefail
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-commit
+./scripts/generate-blocklist.sh
+echo "Setup complete. Git hooks configured, blocklist generated."
+"""
