@@ -60,15 +60,18 @@
 %{ for i, mount in source_mounts ~}
     {
       "id": "${mount.id}",
-      "paths": ["${mount.container}"],
+      "paths": [
+        "${mount.container}"
+      ],
       "excludes": [],
-      "destinationIds": ["${peer_id}"],
+      "destinationIds": [
+        "${peer_id}"
+      ],
       "healthchecks": {
         "backup": "${mount.healthcheck}"
       }
     }%{ if i < length(source_mounts) - 1 },
 %{ else }
-
 %{ endif ~}
 %{ endfor ~}
   ]
