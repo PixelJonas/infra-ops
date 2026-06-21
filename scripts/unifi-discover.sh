@@ -7,15 +7,28 @@ mkdir -p "$OUTDIR"
 UNIFI_HOST="${UNIFI_HOST:-$(doppler secrets get INFRA_UNIFI_HOST --plain -p infra-ops -c prd)}"
 UNIFI_API_KEY="${UNIFI_API_KEY:-$(doppler secrets get INFRA_UNIFI_API_KEY --plain -p infra-ops -c prd)}"
 
-BASE_URL="${UNIFI_HOST}/integration"
+BASE_URL="${UNIFI_HOST}/proxy/network/integration"
 
 fetch() {
   local path="$1"
   local outfile="$2"
+  local optional="${3:-}"
   echo "Fetching ${path} ..."
-  curl -sSf -k \
+  local http_code
+  http_code=$(curl -sS -k -o "${OUTDIR}/${outfile}.raw" -w "%{http_code}" \
     -H "X-API-Key: ${UNIFI_API_KEY}" \
-    "${BASE_URL}${path}" | python3 -m json.tool > "${OUTDIR}/${outfile}"
+    "${BASE_URL}${path}")
+  if [ "$http_code" -ge 400 ]; then
+    rm -f "${OUTDIR}/${outfile}.raw"
+    if [ "$optional" = "optional" ]; then
+      echo "  → skipped (HTTP ${http_code})"
+      return 0
+    fi
+    echo "  → FAILED (HTTP ${http_code})"
+    return 1
+  fi
+  python3 -m json.tool < "${OUTDIR}/${outfile}.raw" > "${OUTDIR}/${outfile}"
+  rm -f "${OUTDIR}/${outfile}.raw"
   echo "  → ${OUTDIR}/${outfile} ($(python3 -c "import json; d=json.load(open('${OUTDIR}/${outfile}')); print(len(d) if isinstance(d,list) else len(d.get('data',d)))" 2>/dev/null || echo '?') entries)"
 }
 
@@ -31,7 +44,7 @@ fetch "/v1/sites/${SITE_ID}/networks" "networks.json"
 fetch "/v1/sites/${SITE_ID}/wifi/broadcasts" "wifi-broadcasts.json"
 fetch "/v1/sites/${SITE_ID}/firewall/zones" "firewall-zones.json"
 fetch "/v1/sites/${SITE_ID}/firewall/policies" "firewall-policies.json"
-fetch "/v1/sites/${SITE_ID}/firewall/policies/ordering" "firewall-policy-ordering.json"
+fetch "/v1/sites/${SITE_ID}/firewall/policies/ordering" "firewall-policy-ordering.json" optional
 fetch "/v1/sites/${SITE_ID}/dns/policies" "dns-policies.json"
 fetch "/v1/sites/${SITE_ID}/acl-rules" "acl-rules.json"
 fetch "/v1/sites/${SITE_ID}/traffic-matching-lists" "traffic-matching-lists.json"
@@ -50,8 +63,15 @@ curl -sSf -k -c "$COOKIE_JAR" \
   "${UNIFI_HOST}/api/auth/login" > /dev/null
 
 curl -sSf -k -b "$COOKIE_JAR" \
-  "${UNIFI_HOST}/proxy/network/v2/api/site/default/rest/user" \
-  | python3 -m json.tool > "${OUTDIR}/dhcp-reservations.json"
+  "${UNIFI_HOST}/proxy/network/api/s/default/rest/user" \
+  | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+users = data.get('data', data) if isinstance(data, dict) else data
+reservations = [u for u in users if u.get('use_fixedip') and u.get('fixed_ip')]
+json.dump(reservations, sys.stdout, indent=2)
+" > "${OUTDIR}/dhcp-reservations.json"
+echo "  → ${OUTDIR}/dhcp-reservations.json ($(python3 -c "import json; print(len(json.load(open('${OUTDIR}/dhcp-reservations.json'))))" 2>/dev/null || echo '?') reservations)"
 echo "  → ${OUTDIR}/dhcp-reservations.json"
 
 echo ""
