@@ -18,9 +18,16 @@ resource "unifi_wifi_broadcast" "jarvis" {
   }
 
   security_configuration = {
-    type                 = "WPA2_PERSONAL"
-    passphrase           = local.wifi_jarvis_pass
-    fast_roaming_enabled = false
+    type                      = "WPA2_WPA3_PERSONAL"
+    passphrase                = local.wifi_jarvis_pass
+    pmf_mode                  = "OPTIONAL"
+    fast_roaming_enabled      = false
+    wpa3_fast_roaming_enabled = false
+
+    sae_configuration = {
+      anticlogging_threshold_seconds = 5
+      sync_time_seconds              = 5
+    }
   }
 }
 
@@ -43,9 +50,16 @@ resource "unifi_wifi_broadcast" "friday" {
   }
 
   security_configuration = {
-    type                 = "WPA2_PERSONAL"
-    passphrase           = local.wifi_friday_pass
-    fast_roaming_enabled = false
+    type                      = "WPA2_WPA3_PERSONAL"
+    passphrase                = local.wifi_friday_pass
+    pmf_mode                  = "OPTIONAL"
+    fast_roaming_enabled      = false
+    wpa3_fast_roaming_enabled = false
+
+    sae_configuration = {
+      anticlogging_threshold_seconds = 5
+      sync_time_seconds              = 5
+    }
   }
 }
 
@@ -70,8 +84,15 @@ resource "unifi_wifi_broadcast" "bloomfeld" {
   }
 
   security_configuration = {
-    type                 = "WPA2_PERSONAL"
-    passphrase           = local.wifi_bloomfeld_pass
-    fast_roaming_enabled = false
+    type                      = "WPA2_WPA3_PERSONAL"
+    passphrase                = local.wifi_bloomfeld_pass
+    pmf_mode                  = "OPTIONAL"
+    fast_roaming_enabled      = false
+    wpa3_fast_roaming_enabled = false
+
+    sae_configuration = {
+      anticlogging_threshold_seconds = 5
+      sync_time_seconds              = 5
+    }
   }
 }
