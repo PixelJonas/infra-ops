@@ -8,6 +8,7 @@ resource "unifi_network" "default" {
   cellular_backup_enabled = false
   internet_access_enabled = true
   mdns_forwarding_enabled = true
+  zone_id                 = data.unifi_firewall_zone.internal.id
 
   ipv4_configuration = {
     auto_scale_enabled = true
@@ -39,6 +40,7 @@ resource "unifi_network" "prison" {
   cellular_backup_enabled = true
   internet_access_enabled = true
   mdns_forwarding_enabled = true
+  zone_id                 = data.unifi_firewall_zone.internal.id
 
   ipv4_configuration = {
     auto_scale_enabled = true
@@ -66,6 +68,7 @@ resource "unifi_network" "guest" {
   cellular_backup_enabled = true
   internet_access_enabled = true
   mdns_forwarding_enabled = true
+  zone_id                 = data.unifi_firewall_zone.hotspot.id
 
   ipv4_configuration = {
     auto_scale_enabled = true

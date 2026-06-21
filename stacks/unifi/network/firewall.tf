@@ -3,6 +3,11 @@ data "unifi_firewall_zone" "internal" {
   name    = "Internal"
 }
 
+data "unifi_firewall_zone" "hotspot" {
+  site_id = local.unifi_site_id
+  name    = "Hotspot"
+}
+
 data "unifi_firewall_zone" "external" {
   site_id = local.unifi_site_id
   name    = "External"
